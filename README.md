@@ -1,4 +1,4 @@
-phonegap-tools
+deferred-tools
 ==============
 
-PhoneGap Tools
+Deferred Tools
