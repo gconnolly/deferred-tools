@@ -15,7 +15,7 @@
                 d.resolve(new DeferredFileSystem(fileSystem));
             };
 
-        self.entry.copyTo(type, size, successCallback, errorCallback);
+        window.requestFileSystem(type, size, successCallback, errorCallback);
 
         return d.promise();
     };

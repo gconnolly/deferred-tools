@@ -1,63 +1,82 @@
 ﻿(function (window, $, undefined) {
 
-    function UnderscoreDeferred(promises) {
-        this.promises = promises;
+    var Powerhouse = function Powerhouse(promise) {
+        this.promise = promise;
     }
 
-    UnderscoreDeferred.wrap = function wrap(list) {
-        var promises = [];
+    Powerhouse.wrap = function wrap(list) {
+        var newPromise = $.Deferred();
 
-        for (var i = 0; i < list.length; i++) {
-            var d = $.Deferred();
+        var interval = setInterval(function () {
 
-            promises.push(d.promise());
+            if (list.length) {
+                var d = $.Deferred();
+                var item = list.pop();
+                newPromise.notify(d.promise());
+                d.resolve(item);
+            } else {
+                clearInterval(interval);
+                newPromise.resolve();
+            }
 
-            setTimeout(function (e, j) {
-                e.resolve(list[j]);
-            }, 1000, d, i);
-        }
+        }, 3000);
 
-        return new UnderscoreDeferred(promises);
+        return new Powerhouse(newPromise.promise());
     };
 
-    UnderscoreDeferred.prototype.map = function map(func) {
-        var promises = [];
+    Powerhouse.prototype.each = function each(func) {
+        var newPromise = $.Deferred();
 
-        for (var i = 0; i < this.promises.length; i++) {
-            promises.push(this.promises[i].then(function (result) {
-                return $.when(func(result));
+        this.promise.progress(function (result) {
+            newPromise.notify(result.then(function (value) {
+                $.when(func(value)).then(function () {
+                    return value;
+                })
             }));
-        }
+        });
 
-        return new UnderscoreDeferred(promises);
+        this.promise.done(newPromise.resolve);
+
+        return new Powerhouse(newPromise.promise());
     };
 
-    UnderscoreDeferred.prototype.toArray = function toArray(func) {
+    Powerhouse.prototype.map = function map(func) {
+        var newPromise = $.Deferred();
+
+        this.promise.progress(function (result) {
+            newPromise.notify(result.then(function (value) {
+                return $.when(func(value));
+            }));
+        });
+
+        this.promise.done(newPromise.resolve);
+
+        return new Powerhouse(newPromise.promise());
+    };
+
+    Powerhouse.prototype.filter = function filter(func) {
+        var newPromise = $.Deferred();
+
+        //TODO
+        this.promise.done(newPromise.resolve);
+
+        return new Powerhouse(newPromise.promise());
+    };
+
+    Powerhouse.prototype.toArray = function toArray() {
         var results = [];
 
-        for (var i = 0; i < this.promises.length; i++) {
-            this.promises[i].then(function (result) {
-                results.push(result);
+        this.promise.progress(function (result) {
+            result.then(function (value) {
+                results.push(value);
             });
-        }
+        });
 
-        return $.when.apply(null, this.promises)
-                    .then(function () {
-                        return func(results);
-                    });
+        return this.promise.then(function () {
+            return results;
+        });
     };
 
-})(window, jQuery);
+    window.Powerhouse = Powerhouse;
 
-var newList = UnderscoreDeferred.wrap([1, 2, 3, 4, 5])
-            .map(function (item) {
-                console.log(item + 1);
-                return item + 1;
-            })
-            .map(function (item) {
-                console.log(item * 2);
-                return item * 2;
-            })
-            .toArray(function (results) {
-                console.log(results);
-            });
+})(window, jQuery);

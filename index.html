@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Powerhouse</title>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="powerhouse.js"></script>
+</head>
+<body>
+    Powerhouse
+</body>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var newList = Powerhouse.wrap([1, 2, 3, 4, 5])
+            .each(function (item) {
+                console.log(item + 1);
+                return item + 1;
+            })
+            .map(function (item) {
+                console.log(item * 2);
+                return item * 2;
+            })
+            .toArray()
+            .pipe(function (arr) {
+                console.log(arr);
+            });
+    });
+
+
+</script>
+</html>
