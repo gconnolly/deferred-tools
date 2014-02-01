@@ -11,19 +11,60 @@
 <script type="text/javascript">
 
     $(document).ready(function () {
-        var newList = Powerhouse.wrap([1, 2, 3, 4, 5])
-            .each(function (item) {
-                console.log(item + 1);
-                return item + 1;
-            })
-            .map(function (item) {
-                console.log(item * 2);
-                return item * 2;
-            })
-            .toArray()
-            .pipe(function (arr) {
-                console.log(arr);
-            });
+    var newList = Powerhouse.chain([1, 2, 3, 4, 5])
+        .map(function (item) {
+            console.log(item + 1);
+            return item + 1;
+        })
+        .each(function (item) {
+            return $.getJSON('sample.json')
+                .then(function (results) {
+                    return results[item];
+                })
+        })
+        .map(function (item) {
+            console.log(item * 2);
+            return item * 2;
+        })
+        .value()
+        .pipe(function (arr) {
+            console.log(arr);
+        });
+
+//        var deferred = $.Deferred();
+
+//        Powerhouse.dispatch(deferred.promise())
+//            .map(function (item) {
+//                console.log(item + 1);
+//                return item + 1;
+//            })
+//            .each(function (item) {
+//                return $.getJSON('sample.json')
+//                    .then(function (results) {
+//                        return results[item];
+//                    })
+//            })
+//            .map(function (item) {
+//                console.log(item * 2);
+//                return item * 2;
+//            })
+//            .value()
+//            .pipe(function (arr) {
+//                console.log(arr);
+//            });
+
+//        var list = [1, 2, 3, 4, 5];
+//        var interval = setInterval(function () {
+
+//            if (list.length) {
+//                var item = list.pop();
+//                deferred.notify(item);
+//            } else {
+//                clearInterval(interval);
+//                deferred.resolve();
+//            }
+
+//        }, 3000);
     });
 
 

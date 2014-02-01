@@ -4,66 +4,73 @@
         this.promise = promise;
     }
 
-    Powerhouse.wrap = function wrap(list) {
-        var newPromise = $.Deferred();
+    Powerhouse.dispatch = function dispatch(promise) {
+        var deferred = $.Deferred();
 
-        var interval = setInterval(function () {
+        promise.progress(function (result) {
+            deferred.notify($.when().then(function () {
+                return result;
+            }));
+        });
 
-            if (list.length) {
-                var d = $.Deferred();
-                var item = list.pop();
-                newPromise.notify(d.promise());
-                d.resolve(item);
-            } else {
-                clearInterval(interval);
-                newPromise.resolve();
-            }
+        return new Powerhouse(deferred.promise());
+    };
 
-        }, 3000);
+    Powerhouse.chain = function chain(list) {
+        var deferred = $.Deferred();
 
-        return new Powerhouse(newPromise.promise());
+        for (var i = 0; i < list.length; i++) {
+            var d = $.Deferred();
+            deferred.notify(d.promise());
+            d.resolve(list[i]);
+        }
+
+        deferred.resolve();
+
+        return new Powerhouse(deferred.promise());
     };
 
     Powerhouse.prototype.each = function each(func) {
-        var newPromise = $.Deferred();
+        var deferred = $.Deferred();
 
         this.promise.progress(function (result) {
-            newPromise.notify(result.then(function (value) {
-                $.when(func(value)).then(function () {
+            deferred.notify(result.then(function (value) {
+                return $.when(func(value)).then(function () {
                     return value;
                 })
             }));
         });
 
-        this.promise.done(newPromise.resolve);
+        this.promise.done(deferred.resolve);
 
-        return new Powerhouse(newPromise.promise());
+        return new Powerhouse(deferred.promise());
     };
 
     Powerhouse.prototype.map = function map(func) {
-        var newPromise = $.Deferred();
+        var deferred = $.Deferred();
 
         this.promise.progress(function (result) {
-            newPromise.notify(result.then(function (value) {
+            deferred.notify(result.then(function (value) {
                 return $.when(func(value));
             }));
         });
 
-        this.promise.done(newPromise.resolve);
+        this.promise.done(deferred.resolve);
 
-        return new Powerhouse(newPromise.promise());
+        return new Powerhouse(deferred.promise());
     };
 
     Powerhouse.prototype.filter = function filter(func) {
-        var newPromise = $.Deferred();
+        var deferred = $.Deferred();
 
         //TODO
-        this.promise.done(newPromise.resolve);
 
-        return new Powerhouse(newPromise.promise());
+        this.promise.done(deferred.resolve);
+
+        return new Powerhouse(deferred.promise());
     };
 
-    Powerhouse.prototype.toArray = function toArray() {
+    Powerhouse.prototype.value = function value() {
         var results = [];
 
         this.promise.progress(function (result) {
