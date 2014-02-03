@@ -5,27 +5,42 @@
     }
 
     Powerhouse.dispatch = function dispatch(promise) {
-        var deferred = $.Deferred();
+        var deferred = $.Deferred(),
+            deferreds = [];
 
         promise.progress(function (result) {
-            deferred.notify($.when().then(function () {
+            var d = $.when();
+            deferreds.push(d);
+
+            deferred.notify(d.then(function () {
                 return result;
             }));
+        });
+
+        promise.done(function () {
+            deferred.resolve(deferreds.length);
         });
 
         return new Powerhouse(deferred.promise());
     };
 
     Powerhouse.chain = function chain(list) {
-        var deferred = $.Deferred();
+        var deferred = $.Deferred(),
+            deferreds = [];
 
         for (var i = 0; i < list.length; i++) {
             var d = $.Deferred();
-            deferred.notify(d.promise());
-            d.resolve(list[i]);
+            deferreds.push(d.promise());
+
+            setTimeout(function (dfd, idx) {
+                deferred.notify(dfd.promise());
+                dfd.resolve(list[idx]);
+            }, 0, d, i);
         }
 
-        deferred.resolve();
+        $.when.apply($, deferreds).done(function () {
+            deferred.resolve(deferreds.length);
+        });
 
         return new Powerhouse(deferred.promise());
     };
@@ -71,16 +86,32 @@
     };
 
     Powerhouse.prototype.value = function value() {
-        var results = [];
+        var results = [],
+            actual = 0,
+            expected = 0,
+            finalResult;
 
         this.promise.progress(function (result) {
             result.then(function (value) {
                 results.push(value);
+
+                actual++;
+
+                if (finalResult && (actual === expected)) {
+                    finalResult.resolve(results);
+                }
             });
         });
 
-        return this.promise.then(function () {
-            return results;
+        return this.promise.then(function (exp) {
+            finalResult = $.Deferred();
+            expected = exp;
+
+            if (finalResult && (actual === expected)) {
+                finalResult.resolve(results);
+            }
+
+            return finalResult;
         });
     };
 
