@@ -19,20 +19,17 @@
         return d.promise();
     };
 
-    function DeferredSQLDatabase() { }
+    function DeferredSQLDatabase(db) {
+        this.database = db;
+        this.version = db.version;
+    }
 
-    DeferredSQLDatabase.prototype.openDatabase = function openDatabase(name, version, displayName, estimatedSize) {
+    window.openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize) {
         var self = this,
             d = $.Deferred(),
-            creationCallback = function () {
-                return self;
-            };
+            db = window.openDatabase(name, version, displayName, estimatedSize);
 
-        self.database = window.openDatabase(name, version, displayName, estimatedSize, creationCallback);
-
-        self.version = self.database.version;
-
-        return d.promise();
+        return new DeferredSQLDatabase(db);
     };
 
     DeferredSQLDatabase.prototype.transaction = function transaction(callback) {

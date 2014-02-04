@@ -29,17 +29,17 @@
             deferreds = [];
 
         for (var i = 0; i < list.length; i++) {
-            var d = $.Deferred();
-            deferreds.push(d.promise());
+            var dfd = $.Deferred();
+            promises.push(d.promise());
 
-            setTimeout(function (dfd, idx) {
-                deferred.notify(dfd.promise());
-                dfd.resolve(list[idx]);
-            }, 0, d, i);
+            setTimeout(function (d, idx) {
+                deferred.notify(d.promise());
+                d.resolve(list[idx]);
+            }, 0, dfd, i);
         }
 
-        $.when.apply($, deferreds).done(function () {
-            deferred.resolve(deferreds.length);
+        $.when.apply($, promises).done(function () {
+            deferred.resolve(promises.length);
         });
 
         return new Powerhouse(deferred.promise());
