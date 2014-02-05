@@ -12,6 +12,7 @@
             },
             errorCallback = function (tx, error) {
                 d.reject(self, error);
+                return true;
             };
 
         self.transaction.executeSql(sqlStatement, sqlArguments, callback, errorCallback);
@@ -24,7 +25,7 @@
         this.version = db.version;
     }
 
-    window.openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize) {
+    var openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize) {
         var self = this,
             d = $.Deferred(),
             db = window.openDatabase(name, version, displayName, estimatedSize);
@@ -82,6 +83,6 @@
         return d.promise();
     };
 
-    window.DeferredSQLDatabase = DeferredSQLDatabase;
+    window.openDatabaseDeferred = openDatabaseDeferred;
 
 })(window, jQuery);
