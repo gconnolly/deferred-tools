@@ -7,7 +7,7 @@
     DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments) {
         var self = this,
             d = $.Deferred(),
-            callback = function (tx, resultSet) {
+            successCallback = function (tx, resultSet) {
                 d.resolve(self, resultSet);
             },
             errorCallback = function (tx, error) {
@@ -15,7 +15,7 @@
                 return true;
             };
 
-        self.transaction.executeSql(sqlStatement, sqlArguments, callback, errorCallback);
+        self.transaction.executeSql(sqlStatement, sqlArguments, successCallback, errorCallback);
 
         return d.promise();
     };
@@ -25,12 +25,16 @@
         this.version = db.version;
     }
 
-    var openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize) {
+    var openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize, creationCallback) {
         var self = this,
             d = $.Deferred(),
-            db = window.openDatabase(name, version, displayName, estimatedSize);
+            wrappedCreationCallback = function () {
+                creationCallback(deferredDb);
+            },
+            db = window.openDatabase(name, version, displayName, estimatedSize, wrappedCreationCallback),
+            deferredDb = new DeferredSQLDatabase(db);
 
-        return new DeferredSQLDatabase(db);
+        return deferredDb;
     };
 
     DeferredSQLDatabase.prototype.transaction = function transaction(callback) {
@@ -57,11 +61,14 @@
             errorCallback = function (error) {
                 d.reject(error);
             },
-            successCallback = function (tx) {
-                d.resolve(new DeferredSQLTransaction(tx));
+            successCallback = function () {
+                d.resolve();
+            },
+            wrappedCallback = function (tx) {
+                callback(new DeferredSQLTransaction(tx));
             };
 
-        self.database.readTransaction(callback, errorCallback, successCallback);
+        self.database.readTransaction(wrappedCallback, errorCallback, successCallback);
 
         return d.promise();
     };
@@ -72,10 +79,12 @@
             errorCallback = function (error) {
                 d.reject(error);
             },
-            successCallback = function (tx) {
+            successCallback = function () {
                 self.version = self.database.version;
-
-                d.resolve(new DeferredSQLTransaction(tx));
+                d.resolve();
+            },
+            wrappedCallback = function (tx) {
+                callback(new DeferredSQLTransaction(tx));
             };
 
         self.database.changeVersion(oldVersion, newVersion, callback, errorCallback, successCallback);
