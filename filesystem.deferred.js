@@ -5,7 +5,7 @@
         this.PERSISTENT = window.PERSISTENT;
     };
 
-    DeferredLocalFileSystem.prototype.requestFileSystem = function requestFileSystem(type, size) {
+    var requestFileSystemDeferred = function requestFileSystemDeferred(type, size) {
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
@@ -20,7 +20,7 @@
         return d.promise();
     };
 
-    DeferredLocalFileSystem.prototype.resolveLocalFileSystemURL = function resolveLocalFileSystemURL(url) {
+    var resolveLocalFileSystemURLDeferred = function resolveLocalFileSystemURLDeferred(url) {
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
@@ -43,7 +43,7 @@
 
         //
         self.name = fileSystem.name;
-        self.root = fileSystem.root;
+        self.root = new DeferredEntry(fileSystem.root);
     };
 
     function DeferredEntry(entry) {
@@ -248,5 +248,8 @@
 
         return d.promise();
     };
+
+    window.requestFileSystemDeferred = requestFileSystemDeferred;
+    window.resolveLocalFileSystemURLDeferred = resolveLocalFileSystemURLDeferred;
 
 })(window, jQuery);
