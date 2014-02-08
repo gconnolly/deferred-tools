@@ -4,7 +4,7 @@
         this.transaction = tx;
     };
 
-    DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments) {
+    DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments, handleErrors) {
         var self = this,
             d = $.Deferred(),
             successCallback = function (tx, resultSet) {
@@ -12,10 +12,11 @@
             },
             errorCallback = function (tx, error) {
                 d.reject(self, error);
+
                 return true;
             };
 
-        self.transaction.executeSql(sqlStatement, sqlArguments, successCallback, errorCallback);
+        self.transaction.executeSql(sqlStatement, sqlArguments, successCallback, handleErrors ? errorCallback : undefined);
 
         return d.promise();
     };
@@ -41,6 +42,11 @@
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
+                // I need to do some work here. Did the user trigger add a
+                //failure handler? can I tell if they did?
+                //I can ensure that I am the first to handle an error
+                //I can capture the most recent sql error
+
                 d.reject(error);
             },
             successCallback = function () {
