@@ -39,5 +39,12 @@ Hey, its not much. But it can be helpful if you have already bought into using t
 [Filesystem API](http://www.w3.org/TR/file-system-api/#the-asynchronous-filesystem-interface)
 --------------
 
+Again, not much to see here beyond what you would expect. Fewer callbacks, more promises, if that is what you want.
 
-
+````javascript
+	
+	window.requestFileSystem()
+		.then(function (fileSystem) {
+			//TODO
+		});
+````
