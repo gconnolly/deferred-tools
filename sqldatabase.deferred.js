@@ -46,7 +46,7 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                callback(new DeferredSQLTransaction(tx));
+                return callback(new DeferredSQLTransaction(tx));
             };
 
         this._database.transaction(wrappedCallback, errorCallback, successCallback);
@@ -63,7 +63,7 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                callback(new DeferredSQLTransaction(tx));
+                return callback(new DeferredSQLTransaction(tx));
             };
 
         this._database.readTransaction(wrappedCallback, errorCallback, successCallback);
@@ -75,6 +75,7 @@
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
+                self.version = self._database.version;
                 d.reject(error);
             },
             successCallback = function () {
@@ -82,7 +83,7 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                callback(new DeferredSQLTransaction(tx));
+                return callback(new DeferredSQLTransaction(tx));
             };
 
         this._database.changeVersion(oldVersion, newVersion, callback, errorCallback, successCallback);
