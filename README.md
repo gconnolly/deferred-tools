@@ -66,7 +66,7 @@ db.changeVersion( oldVersion, newVersion, callback )
 ### SQL Transaction
 
 ```javascript
-db.executeSql( sqlStatement, sqlArguments, errorCallback )
+transaction.executeSql( sqlStatement, sqlArguments, errorCallback )
     .done(function ( transaction, resultSet ) {})
     .fail(function ( transaction, error ) {})
 ```
