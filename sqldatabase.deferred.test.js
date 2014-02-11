@@ -46,7 +46,7 @@
             });
     });
 
-    test('executeSql rejects promise if error and executeSql is handling error', function () {
+    test('executeSql rejects promise if error and error callback provided', function () {
         //Arrange
         var expectedSqlStatement = 'fakeSqlStatement',
             expectedSqlArguments = 'fakeSqlArguments',
@@ -60,12 +60,32 @@
         }
 
         //Act
-        deferredSQLTransaction.executeSql(expectedSqlStatement, expectedSqlArguments, true)
+        deferredSQLTransaction.executeSql(expectedSqlStatement, expectedSqlArguments, $.noop)
             .fail(function (actualSQLTransaction, actualError) {
                 //Assert
                 equal(actualSQLTransaction, deferredSQLTransaction, 'transaction is correct');
                 equal(actualError, expectedError, 'error is correct');
             });
+    });
+
+    test('executeSql calls error callback if error and error callback provided', function () {
+        //Arrange
+        var expectedSqlStatement = 'fakeSqlStatement',
+            expectedSqlArguments = 'fakeSqlArguments',
+            expectedError = 'fakeError',
+            expectedErrorCallback = function () {
+                ok(true, 'error callback is called');
+            },
+            deferredSQLTransaction = new DeferredSQLTransaction(fakeSQLTransaction);
+
+        fakeSQLTransaction.executeSql = function (actualSqlStatement, actualSqlArguments, successCallback, errorCallback) {
+            if (errorCallback) {
+                errorCallback(fakeSQLTransaction, expectedError);
+            }
+        }
+
+        //Act
+        deferredSQLTransaction.executeSql(expectedSqlStatement, expectedSqlArguments, expectedErrorCallback);
     });
 
     test('executeSql does not resolve or reject promise if error and executeSql not handling error', function () {

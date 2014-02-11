@@ -4,19 +4,19 @@
         this._transaction = tx;
     };
 
-    DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments, handleErrors) {
+    DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments, errorCallback) {
         var self = this,
             d = $.Deferred(),
             successCallback = function (tx, resultSet) {
                 d.resolve(self, resultSet);
             },
-            errorCallback = function (tx, error) {
+            wrappedErrorCallback = function (tx, error) {
                 d.reject(self, error);
 
-                return true;
+                return errorCallback(tx, error);
             };
 
-        this._transaction.executeSql(sqlStatement, sqlArguments, successCallback, handleErrors ? errorCallback : undefined);
+        this._transaction.executeSql(sqlStatement, sqlArguments, successCallback, errorCallback ? wrappedErrorCallback : undefined);
 
         return d.promise();
     };
