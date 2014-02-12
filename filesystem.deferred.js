@@ -6,63 +6,48 @@
     };
 
     var requestFileSystemDeferred = function requestFileSystemDeferred(type, size) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (fileSystem) {
                 d.resolve(new DeferredFileSystem(fileSystem));
-            };
+            },
+            requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
-        window.requestFileSystem(type, size, successCallback, errorCallback);
+        requestFileSystem(type, size, successCallback, errorCallback);
 
         return d.promise();
     };
 
     var resolveLocalFileSystemURLDeferred = function resolveLocalFileSystemURLDeferred(url) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
-            };
+                d.resolve(wrapEntry(entry, new DeferredFileSystem(entry.fileSystem)));
+            },
+            resolveLocalFileSystemURL = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
 
-        window.resolveLocalFileSystemURL(url, successCallback, errorCallback);
+        resolveLocalFileSystemURL(url, successCallback, errorCallback);
 
         return d.promise();
     };
 
     function DeferredFileSystem(fileSystem) {
-        var self = this;
+        this._fileSystem = fileSystem;
 
-        //
-        self.fileSystem = fileSystem;
-
-        //
-        self.name = fileSystem.name;
-        self.root = new DeferredEntry(fileSystem.root);
+        this.name = fileSystem.name;
+        this.root = wrapEntry(fileSystem.root, this);
     };
 
     function DeferredEntry(entry) {
-        var self = this;
-
-        //
-        self.entry = entry;
-
-        //
-        self.isFile = entry.isFile;
-        self.isDirectory = entry.isDirectory;
-        self.name = entry.name;
-        self.fullPath = entry.fullPath;
-        self.filesystem = entry.filesystem;
+        this._entry = entry;
     };
 
     DeferredEntry.prototype.getMetadata = function getMetadata() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -70,44 +55,41 @@
                 d.resolve(metadata);
             };
 
-        self.entry.getMetadata(successCallback, errorCallback);
+        this._entry.getMetadata(successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredEntry.prototype.copyTo = function copyTo(parent, newName) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
+                d.resolve(wrapEntry(entry, this._entry.fileSystem));
             };
 
-        self.entry.copyTo(parent, newName, successCallback, errorCallback);
+        this._entry.copyTo(parent, newName, successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredEntry.prototype.moveTo = function moveTo(parent, newName) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
+                d.resolve(wrapEntry(entry, this._entry.fileSystem));
             };
 
-        self.entry.moveTo(parent, newName, successCallback, errorCallback);
+        this._entry.moveTo(parent, newName, successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredEntry.prototype.remove = function remove() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -115,39 +97,43 @@
                 d.resolve();
             };
 
-        self.entry.remove(successCallback, errorCallback);
+        this._entry.remove(successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredEntry.prototype.toURL = function toURL() {
-        var self = this;
-
-        return self.entry.toURL();
+        return this.entry.toURL();
     };
 
     DeferredEntry.prototype.getParent = function getParent() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
+                d.resolve(wrapEntry(entry, this._entry.fileSystem));
             };
 
-        self.entry.remove(successCallback, errorCallback);
+        this._entry.remove(successCallback, errorCallback);
 
         return d.promise();
     };
 
-    function DeferredFileEntry(fileEntry) {
-        this.entry = fileEntry;
+    window.DeferredFileEntry = function DeferredFileEntry(fileEntry, fileSystem) {
+        DeferredEntry.call(this, fileEntry);
+
+        this.isFile = fileEntry.isFile;
+        this.isDirectory = fileEntry.isDirectory;
+        this.name = fileEntry.name;
+        this.fullPath = fileEntry.fullPath;
+        this.filesystem = filesystem;
     };
 
+    DeferredFileEntry.prototype = new DeferredEntry();
+
     DeferredFileEntry.prototype.createWriter = function createWriter() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -155,14 +141,13 @@
                 d.resolve(fileWriter);
             };
 
-        self.entry.createWriter(successCallback, errorCallback);
+        this._entry.createWriter(successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredFileEntry.prototype.file = function file() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -170,52 +155,59 @@
                 d.resolve(file);
             };
 
-        self.entry.file(successCallback, errorCallback);
+        this._entry.file(successCallback, errorCallback);
 
         return d.promise();
     };
 
-    function DeferredDirectoryEntry(directoryEntry) {
-        this.entry = directoryEntry;
+    window.DeferredDirectoryEntry = function DeferredDirectoryEntry(directoryEntry, fileSystem) {
+        DeferredEntry.call(this, directoryEntry);
+
+        this.isFile = directoryEntry.isFile;
+        this.isDirectory = directoryEntry.isDirectory;
+        this.name = directoryEntry.name;
+        this.fullPath = directoryEntry.fullPath;
+        this.filesystem = fileSystem;
     };
+
+    DeferredDirectoryEntry.prototype = new DeferredEntry();
 
     DeferredDirectoryEntry.prototype.createReader = function createReader() {
-        return new DeferredDirectoryReader(self.directoryEntry.createReader());
+        return new DeferredDirectoryReader(this._entry.createReader());
     };
 
+    DeferredDirectoryEntry.prototype = new DeferredEntry();
+
     DeferredDirectoryEntry.prototype.getFile = function getFile(path, options) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
+                d.resolve(wrapEntry(entry, this._entry.fileSystem));
             };
 
-        self.entry.getFile(path, options, successCallback, errorCallback);
+        this._entry.getFile(path, options, successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredDirectoryEntry.prototype.getDirectory = function getDirectory(path, options) {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(new DeferredEntry(entry));
+                d.resolve(wrapEntry(entry, this._entry.fileSystem));
             };
 
-        self.entry.getDirectory(path, options, successCallback, errorCallback);
+        this._entry.getDirectory(path, options, successCallback, errorCallback);
 
         return d.promise();
     };
 
     DeferredDirectoryEntry.prototype.removeRecursively = function removeRecursively() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -223,18 +215,17 @@
                 d.resolve();
             };
 
-        self.entry.remove(successCallback, errorCallback);
+        this._entry.remove(successCallback, errorCallback);
 
         return d.promise();
     };
 
     function DeferredDirectoryReader(directoryReader) {
-        this.directoryReader = directoryReader;
+        this._directoryReader = directoryReader;
     };
 
     DeferredDirectoryReader.prototype.readEntries = function readEntries() {
-        var self = this,
-            d = $.Deferred(),
+        var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
@@ -244,10 +235,18 @@
                 d.resolve(entries);
             };
 
-        self.directoryReader.readEntries(successCallback, errorCallback);
+        this._directoryReader.readEntries(successCallback, errorCallback);
 
         return d.promise();
     };
+
+    function wrapEntry(entry, fileSystem) {
+        if (entry.isFile) {
+            return new DeferredFileEntry(entry, fileSystem);
+        } else if (entry.isDirectory) {
+            return new DeferredDirectoryEntry(entry, fileSystem);
+        }
+    }
 
     window.requestFileSystemDeferred = requestFileSystemDeferred;
     window.resolveLocalFileSystemURLDeferred = resolveLocalFileSystemURLDeferred;
