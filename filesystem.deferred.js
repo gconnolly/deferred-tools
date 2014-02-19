@@ -1,17 +1,12 @@
 ﻿(function (window, $, undefined) {
 
-    function DeferredLocalFileSystem() {
-        this.TEMPORARY = window.TEMPORARY;
-        this.PERSISTENT = window.PERSISTENT;
-    };
-
     var requestFileSystemDeferred = function requestFileSystemDeferred(type, size) {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
-            successCallback = function (fileSystem) {
-                d.resolve(new DeferredFileSystem(fileSystem));
+            successCallback = function (filesystem) {
+                d.resolve(new DeferredFileSystem(filesystem));
             },
             requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
@@ -26,7 +21,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, new DeferredFileSystem(entry.fileSystem)));
+                d.resolve(wrapEntry(entry, new DeferredFileSystem(entry.filesystem)));
             },
             resolveLocalFileSystemURL = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
 
@@ -35,11 +30,11 @@
         return d.promise();
     };
 
-    function DeferredFileSystem(fileSystem) {
-        this._fileSystem = fileSystem;
+    window.DeferredFileSystem = function DeferredFileSystem(filesystem) {
+        this._filesystem = filesystem;
 
-        this.name = fileSystem.name;
-        this.root = wrapEntry(fileSystem.root, this);
+        this.name = filesystem.name;
+        this.root = wrapEntry(filesystem.root, this);
     };
 
     function DeferredEntry(entry) {
@@ -66,7 +61,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.fileSystem));
+                d.resolve(wrapEntry(entry, this._entry.filesystem));
             };
 
         this._entry.copyTo(parent, newName, successCallback, errorCallback);
@@ -80,7 +75,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.fileSystem));
+                d.resolve(wrapEntry(entry, this._entry.filesystem));
             };
 
         this._entry.moveTo(parent, newName, successCallback, errorCallback);
@@ -112,7 +107,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.fileSystem));
+                d.resolve(wrapEntry(entry, this._entry.filesystem));
             };
 
         this._entry.remove(successCallback, errorCallback);
@@ -120,7 +115,7 @@
         return d.promise();
     };
 
-    window.DeferredFileEntry = function DeferredFileEntry(fileEntry, fileSystem) {
+    window.DeferredFileEntry = function DeferredFileEntry(fileEntry, filesystem) {
         DeferredEntry.call(this, fileEntry);
 
         this.isFile = fileEntry.isFile;
@@ -160,20 +155,20 @@
         return d.promise();
     };
 
-    window.DeferredDirectoryEntry = function DeferredDirectoryEntry(directoryEntry, fileSystem) {
+    window.DeferredDirectoryEntry = function DeferredDirectoryEntry(directoryEntry, filesystem) {
         DeferredEntry.call(this, directoryEntry);
 
         this.isFile = directoryEntry.isFile;
         this.isDirectory = directoryEntry.isDirectory;
         this.name = directoryEntry.name;
         this.fullPath = directoryEntry.fullPath;
-        this.filesystem = fileSystem;
+        this.filesystem = filesystem;
     };
 
     DeferredDirectoryEntry.prototype = new DeferredEntry();
 
     DeferredDirectoryEntry.prototype.createReader = function createReader() {
-        return new DeferredDirectoryReader(this._entry.createReader());
+        return new DeferredDirectoryReader(this._entry.createReader(), this._entry.filesystem);
     };
 
     DeferredDirectoryEntry.prototype = new DeferredEntry();
@@ -184,7 +179,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.fileSystem));
+                d.resolve(wrapEntry(entry, this._entry.filesystem));
             };
 
         this._entry.getFile(path, options, successCallback, errorCallback);
@@ -198,7 +193,7 @@
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.fileSystem));
+                d.resolve(wrapEntry(entry, this._entry.filesystem));
             };
 
         this._entry.getDirectory(path, options, successCallback, errorCallback);
@@ -220,8 +215,9 @@
         return d.promise();
     };
 
-    function DeferredDirectoryReader(directoryReader) {
+    function DeferredDirectoryReader(directoryReader, filesystem) {
         this._directoryReader = directoryReader;
+        this._filesystem = filesystem
     };
 
     DeferredDirectoryReader.prototype.readEntries = function readEntries() {
@@ -230,9 +226,12 @@
                 d.reject(error);
             },
             successCallback = function (entries) {
-                //wrap entries in 'Deferred' object.
+                var wrappedEntries = [];
+                for (var i = 0; i < entries.length; i++) {
+                    wrappedEntries.push(wrapEntry(entries[i], this._filesystem));
+                }
 
-                d.resolve(entries);
+                d.resolve(wrappedEntries);
             };
 
         this._directoryReader.readEntries(successCallback, errorCallback);
@@ -240,11 +239,11 @@
         return d.promise();
     };
 
-    function wrapEntry(entry, fileSystem) {
+    function wrapEntry(entry, filesystem) {
         if (entry.isFile) {
-            return new DeferredFileEntry(entry, fileSystem);
+            return new DeferredFileEntry(entry, filesystem);
         } else if (entry.isDirectory) {
-            return new DeferredDirectoryEntry(entry, fileSystem);
+            return new DeferredDirectoryEntry(entry, filesystem);
         }
     }
 
