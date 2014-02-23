@@ -56,12 +56,13 @@
     };
 
     DeferredEntry.prototype.copyTo = function copyTo(parent, newName) {
-        var d = $.Deferred(),
+        var self = this,
+            d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.filesystem));
+                d.resolve(wrapEntry(entry, self._entry.filesystem));
             };
 
         this._entry.copyTo(parent, newName, successCallback, errorCallback);
@@ -70,12 +71,13 @@
     };
 
     DeferredEntry.prototype.moveTo = function moveTo(parent, newName) {
-        var d = $.Deferred(),
+        var self = this,
+            d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.filesystem));
+                d.resolve(wrapEntry(entry, self._entry.filesystem));
             };
 
         this._entry.moveTo(parent, newName, successCallback, errorCallback);
@@ -170,8 +172,6 @@
     DeferredDirectoryEntry.prototype.createReader = function createReader() {
         return new DeferredDirectoryReader(this._entry.createReader(), this._entry.filesystem);
     };
-
-    DeferredDirectoryEntry.prototype = new DeferredEntry();
 
     DeferredDirectoryEntry.prototype.getFile = function getFile(path, options) {
         var d = $.Deferred(),
