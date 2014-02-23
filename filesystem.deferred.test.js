@@ -90,11 +90,11 @@
     test('copyTo executes with provided parent and new name', function () {
         //Arrange
         var expectedFileEntryCopy = {
-            name: 'expectedFileEntryCopy',
-            isFile: true,
-            isDirectory: false
-        }
-        expectedParent = 'expectedParent',
+                name: 'expectedFileEntryCopy',
+                isFile: true,
+                isDirectory: false
+            },
+            expectedParent = 'expectedParent',
             expectedNewName = 'expectedNewName';
 
         fakeFileEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
@@ -110,12 +110,12 @@
     test('copyTo resolves promise if successful', function () {
         //Arrange
         var expectedFileEntryCopy = {
-            name: 'expectedFileEntryCopy',
-            isFile: true,
-            isDirectory: false
-        }
-        expectedParent = 'expectedParent',
-                expectedNewName = 'expectedNewName';
+                name: 'expectedFileEntryCopy',
+                isFile: true,
+                isDirectory: false
+            },
+            expectedParent = 'expectedParent',
+            expectedNewName = 'expectedNewName';
 
         fakeFileEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
             successCallback(expectedFileEntryCopy);
@@ -152,12 +152,12 @@
         test('moveTo executes with provided parent and new name', function () {
             //Arrange
             var expectedFileEntryMove = {
-                name: 'expectedFileEntryMove',
-                isFile: true,
-                isDirectory: false
-            }
-            expectedParent = 'expectedParent',
-            expectedNewName = 'expectedNewName';
+                    name: 'expectedFileEntryMove',
+                    isFile: true,
+                    isDirectory: false
+                },
+                expectedParent = 'expectedParent',
+                expectedNewName = 'expectedNewName';
 
             fakeFileEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {
                 equal(actualParent, expectedParent, 'parent is correct');
@@ -172,11 +172,11 @@
         test('moveTo resolves promise if successful', function () {
             //Arrange
             var expectedFileEntryMove = {
-                name: 'expectedFileEntryMove',
-                isFile: true,
-                isDirectory: false
-            }
-            expectedParent = 'expectedParent',
+                    name: 'expectedFileEntryMove',
+                    isFile: true,
+                    isDirectory: false
+                },
+                expectedParent = 'expectedParent',
                 expectedNewName = 'expectedNewName';
 
             fakeFileEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {
@@ -281,12 +281,12 @@
         test('copyTo executes with provided parent and new name', function () {
             //Arrange
             var expectedDirectoryEntryCopy = {
-                name: 'expectedFileEntryCopy',
-                isFile: true,
-                isDirectory: false
-            }
-            expectedParent = 'expectedParent',
-            expectedNewName = 'expectedNewName';
+                    name: 'expectedFileEntryCopy',
+                    isFile: true,
+                    isDirectory: false
+                },
+                expectedParent = 'expectedParent',
+                expectedNewName = 'expectedNewName';
 
             fakeDirectoryEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
                 equal(actualParent, expectedParent, 'parent is correct');
@@ -301,11 +301,11 @@
         test('copyTo resolves promise if successful', function () {
             //Arrange
             var expectedDirectoryEntryCopy = {
-                name: 'expectedDirectoryEntryCopy',
-                isFile: false,
-                isDirectory: true
-            }
-            expectedParent = 'expectedParent',
+                    name: 'expectedDirectoryEntryCopy',
+                    isFile: false,
+                    isDirectory: true
+                },
+                expectedParent = 'expectedParent',
                 expectedNewName = 'expectedNewName';
 
             fakeDirectoryEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
@@ -343,12 +343,12 @@
         test('moveTo executes with provided parent and new name', function () {
             //Arrange
             var expectedDirectoryEntryMove = {
-                name: 'expectedDirectoryEntryMove',
-                isFile: true,
-                isDirectory: false
-            }
-            expectedParent = 'expectedParent',
-            expectedNewName = 'expectedNewName';
+                    name: 'expectedDirectoryEntryMove',
+                    isFile: true,
+                    isDirectory: false
+                },
+                expectedParent = 'expectedParent',
+                expectedNewName = 'expectedNewName';
 
             fakeDirectoryEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {
                 equal(actualParent, expectedParent, 'parent is correct');
@@ -363,11 +363,11 @@
         test('moveTo resolves promise if successful', function () {
             //Arrange
             var expectedDirectoryEntryMove = {
-                name: 'expectedDirectoryEntryMove',
-                isFile: false,
-                isDirectory: true
-            }
-            expectedParent = 'expectedParent',
+                    name: 'expectedDirectoryEntryMove',
+                    isFile: false,
+                    isDirectory: true
+                },
+                expectedParent = 'expectedParent',
                 expectedNewName = 'expectedNewName';
 
             fakeDirectoryEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {

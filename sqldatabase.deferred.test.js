@@ -13,8 +13,8 @@
     test('executeSql executes provided query with arguments', function () {
         //Arrange
         var expectedSqlStatement = 'fakeSqlStatement',
-            expectedSqlArguments = 'fakeSqlArguments'
-        deferredSQLTransaction = new DeferredSQLTransaction(fakeSQLTransaction);
+            expectedSqlArguments = 'fakeSqlArguments',
+            deferredSQLTransaction = new DeferredSQLTransaction(fakeSQLTransaction);
 
         fakeSQLTransaction.executeSql = function (actualSqlStatement, actualSqlArguments, successCallback, errorCallback) {
             //Assert
