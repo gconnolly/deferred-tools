@@ -100,19 +100,20 @@
     };
 
     DeferredEntry.prototype.toURL = function toURL() {
-        return this.entry.toURL();
+        return this._entry.toURL();
     };
 
     DeferredEntry.prototype.getParent = function getParent() {
-        var d = $.Deferred(),
+        var self = this,
+            d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.filesystem));
+                d.resolve(wrapEntry(entry, self._entry.filesystem));
             };
 
-        this._entry.remove(successCallback, errorCallback);
+        this._entry.getParent(successCallback, errorCallback);
 
         return d.promise();
     };
@@ -174,12 +175,13 @@
     };
 
     DeferredDirectoryEntry.prototype.getFile = function getFile(path, options) {
-        var d = $.Deferred(),
+        var self = this,
+            d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.filesystem));
+                d.resolve(wrapEntry(entry, self._entry.filesystem));
             };
 
         this._entry.getFile(path, options, successCallback, errorCallback);
@@ -188,12 +190,13 @@
     };
 
     DeferredDirectoryEntry.prototype.getDirectory = function getDirectory(path, options) {
-        var d = $.Deferred(),
+        var self = this,
+            d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
             successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, this._entry.filesystem));
+                d.resolve(wrapEntry(entry, self._entry.filesystem));
             };
 
         this._entry.getDirectory(path, options, successCallback, errorCallback);
@@ -210,12 +213,12 @@
                 d.resolve();
             };
 
-        this._entry.remove(successCallback, errorCallback);
+        this._entry.removeRecursively(successCallback, errorCallback);
 
         return d.promise();
     };
 
-    function DeferredDirectoryReader(directoryReader, filesystem) {
+    window.DeferredDirectoryReader = function DeferredDirectoryReader(directoryReader, filesystem) {
         this._directoryReader = directoryReader;
         this._filesystem = filesystem
     };
