@@ -280,7 +280,7 @@
 
         test('copyTo executes with provided parent and new name', function () {
             //Arrange
-            var expectedFileEntryCopy = {
+            var expectedDirectoryEntryCopy = {
                 name: 'expectedFileEntryCopy',
                 isFile: true,
                 isDirectory: false
@@ -288,14 +288,14 @@
             expectedParent = 'expectedParent',
             expectedNewName = 'expectedNewName';
 
-            fakeFileEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
+            fakeDirectoryEntry.copyTo = function (actualParent, actualNewName, successCallback, errorCallback) {
                 equal(actualParent, expectedParent, 'parent is correct');
                 equal(actualNewName, expectedNewName, 'newname is correct');
             };
 
             //Act
-            var deferredFileEntry = new DeferredFileEntry(fakeFileEntry, fakeFileSystem);
-            deferredFileEntry.copyTo(expectedParent, expectedNewName);
+            var deferredDirectoryEntry = new DeferredDirectoryEntry(fakeDirectoryEntry, fakeFileSystem);
+            deferredDirectoryEntry.copyTo(expectedParent, expectedNewName);
         });
 
         test('copyTo resolves promise if successful', function () {
@@ -342,22 +342,22 @@
 
         test('moveTo executes with provided parent and new name', function () {
             //Arrange
-            var expectedFileEntryMove = {
-                name: 'expectedFileEntryMove',
+            var expectedDirectoryEntryMove = {
+                name: 'expectedDirectoryEntryMove',
                 isFile: true,
                 isDirectory: false
             }
             expectedParent = 'expectedParent',
             expectedNewName = 'expectedNewName';
 
-            fakeFileEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {
+            fakeDirectoryEntry.moveTo = function (actualParent, actualNewName, successCallback, errorCallback) {
                 equal(actualParent, expectedParent, 'parent is correct');
                 equal(actualNewName, expectedNewName, 'newname is correct');
             };
 
             //Act
-            var deferredFileEntry = new DeferredFileEntry(fakeFileEntry, fakeFileSystem);
-            deferredFileEntry.moveTo(expectedParent, expectedNewName);
+            var deferredDirectoryEntry = new DeferredDirectoryEntry(fakeDirectoryEntry, fakeFileSystem);
+            deferredDirectoryEntry.moveTo(expectedParent, expectedNewName);
         });
 
         test('moveTo resolves promise if successful', function () {
