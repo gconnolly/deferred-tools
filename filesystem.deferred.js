@@ -1,34 +1,13 @@
 ﻿(function (window, $, undefined) {
 
-    var requestFileSystemDeferred = function requestFileSystemDeferred(type, size) {
-        var d = $.Deferred(),
-            errorCallback = function (error) {
-                d.reject(error);
-            },
-            successCallback = function (filesystem) {
-                d.resolve(new DeferredFileSystem(filesystem));
-            },
-            requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
-
-        requestFileSystem(type, size, successCallback, errorCallback);
-
-        return d.promise();
-    };
-
-    var resolveLocalFileSystemURLDeferred = function resolveLocalFileSystemURLDeferred(url) {
-        var d = $.Deferred(),
-            errorCallback = function (error) {
-                d.reject(error);
-            },
-            successCallback = function (entry) {
-                d.resolve(wrapEntry(entry, new DeferredFileSystem(entry.filesystem)));
-            },
-            resolveLocalFileSystemURL = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
-
-        resolveLocalFileSystemURL(url, successCallback, errorCallback);
-
-        return d.promise();
-    };
+    function wrapEntry(entry, filesystem) {
+        if (entry.isFile) {
+            return new window.DeferredFileEntry(entry, filesystem);
+        }
+        if (entry.isDirectory) {
+            return new window.DeferredDirectoryEntry(entry, filesystem);
+        }
+    }
 
     window.DeferredFileSystem = function DeferredFileSystem(filesystem) {
         this._filesystem = filesystem;
@@ -37,9 +16,35 @@
         this.root = wrapEntry(filesystem.root, this);
     };
 
+    window.DeferredDirectoryReader = function DeferredDirectoryReader(directoryReader, filesystem) {
+        this._directoryReader = directoryReader;
+        this._filesystem = filesystem;
+    };
+
+    window.DeferredDirectoryReader.prototype.readEntries = function readEntries() {
+        var d = $.Deferred(),
+            errorCallback = function (error) {
+                d.reject(error);
+            },
+            successCallback = function (entries) {
+                var wrappedEntries = [],
+                    i;
+
+                for (i = 0; i < entries.length; i++) {
+                    wrappedEntries.push(wrapEntry(entries[i], this._filesystem));
+                }
+
+                d.resolve(wrappedEntries);
+            };
+
+        this._directoryReader.readEntries(successCallback, errorCallback);
+
+        return d.promise();
+    };
+
     function DeferredEntry(entry) {
         this._entry = entry;
-    };
+    }
 
     DeferredEntry.prototype.getMetadata = function getMetadata() {
         var d = $.Deferred(),
@@ -128,9 +133,9 @@
         this.filesystem = filesystem;
     };
 
-    DeferredFileEntry.prototype = new DeferredEntry();
+    window.DeferredFileEntry.prototype = new DeferredEntry();
 
-    DeferredFileEntry.prototype.createWriter = function createWriter() {
+    window.DeferredFileEntry.prototype.createWriter = function createWriter() {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
@@ -144,7 +149,7 @@
         return d.promise();
     };
 
-    DeferredFileEntry.prototype.file = function file() {
+    window.DeferredFileEntry.prototype.file = function file() {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
@@ -168,13 +173,13 @@
         this.filesystem = filesystem;
     };
 
-    DeferredDirectoryEntry.prototype = new DeferredEntry();
+    window.DeferredDirectoryEntry.prototype = new DeferredEntry();
 
-    DeferredDirectoryEntry.prototype.createReader = function createReader() {
-        return new DeferredDirectoryReader(this._entry.createReader(), this._entry.filesystem);
+    window.DeferredDirectoryEntry.prototype.createReader = function createReader() {
+        return new window.DeferredDirectoryReader(this._entry.createReader(), this._entry.filesystem);
     };
 
-    DeferredDirectoryEntry.prototype.getFile = function getFile(path, options) {
+    window.DeferredDirectoryEntry.prototype.getFile = function getFile(path, options) {
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
@@ -189,7 +194,7 @@
         return d.promise();
     };
 
-    DeferredDirectoryEntry.prototype.getDirectory = function getDirectory(path, options) {
+    window.DeferredDirectoryEntry.prototype.getDirectory = function getDirectory(path, options) {
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
@@ -204,7 +209,7 @@
         return d.promise();
     };
 
-    DeferredDirectoryEntry.prototype.removeRecursively = function removeRecursively() {
+    window.DeferredDirectoryEntry.prototype.removeRecursively = function removeRecursively() {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
@@ -218,39 +223,34 @@
         return d.promise();
     };
 
-    window.DeferredDirectoryReader = function DeferredDirectoryReader(directoryReader, filesystem) {
-        this._directoryReader = directoryReader;
-        this._filesystem = filesystem
-    };
-
-    DeferredDirectoryReader.prototype.readEntries = function readEntries() {
+    window.requestFileSystemDeferred = function requestFileSystemDeferred(type, size) {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
             },
-            successCallback = function (entries) {
-                var wrappedEntries = [];
-                for (var i = 0; i < entries.length; i++) {
-                    wrappedEntries.push(wrapEntry(entries[i], this._filesystem));
-                }
+            successCallback = function (filesystem) {
+                d.resolve(new window.DeferredFileSystem(filesystem));
+            },
+            requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
-                d.resolve(wrappedEntries);
-            };
-
-        this._directoryReader.readEntries(successCallback, errorCallback);
+        requestFileSystem(type, size, successCallback, errorCallback);
 
         return d.promise();
     };
 
-    function wrapEntry(entry, filesystem) {
-        if (entry.isFile) {
-            return new DeferredFileEntry(entry, filesystem);
-        } else if (entry.isDirectory) {
-            return new DeferredDirectoryEntry(entry, filesystem);
-        }
-    }
+    window.resolveLocalFileSystemURLDeferred = function resolveLocalFileSystemURLDeferred(url) {
+        var d = $.Deferred(),
+            errorCallback = function (error) {
+                d.reject(error);
+            },
+            successCallback = function (entry) {
+                d.resolve(wrapEntry(entry, new window.DeferredFileSystem(entry.filesystem)));
+            },
+            resolveLocalFileSystemURL = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
 
-    window.requestFileSystemDeferred = requestFileSystemDeferred;
-    window.resolveLocalFileSystemURLDeferred = resolveLocalFileSystemURLDeferred;
+        resolveLocalFileSystemURL(url, successCallback, errorCallback);
+
+        return d.promise();
+    };
 
 })(window, jQuery);

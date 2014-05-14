@@ -4,7 +4,7 @@
         this._transaction = tx;
     };
 
-    DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments, errorCallback) {
+    window.DeferredSQLTransaction.prototype.executeSql = function executeSql(sqlStatement, sqlArguments, errorCallback) {
         var self = this,
             d = $.Deferred(),
             successCallback = function (tx, resultSet) {
@@ -24,20 +24,21 @@
     window.DeferredSQLDatabase = function DeferredSQLDatabase(db) {
         this._database = db;
         this.version = db.version;
-    }
+    };
 
-    var openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize, creationCallback) {
-        var d = $.Deferred(),
+    window.openDatabaseDeferred = function openDatabase(name, version, displayName, estimatedSize, creationCallback) {
+        var deferredDb,
             wrappedCreationCallback = function () {
                 creationCallback(deferredDb);
             },
-            db = window.openDatabase(name, version, displayName, estimatedSize, wrappedCreationCallback),
-            deferredDb = new DeferredSQLDatabase(db);
+            db = window.openDatabase(name, version, displayName, estimatedSize, wrappedCreationCallback);
+
+        deferredDb = new window.DeferredSQLDatabase(db);
 
         return deferredDb;
     };
 
-    DeferredSQLDatabase.prototype.transaction = function transaction(callback) {
+    window.DeferredSQLDatabase.prototype.transaction = function transaction(callback) {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
@@ -46,7 +47,7 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                return callback(new DeferredSQLTransaction(tx));
+                return callback(new window.DeferredSQLTransaction(tx));
             };
 
         this._database.transaction(wrappedCallback, errorCallback, successCallback);
@@ -54,7 +55,7 @@
         return d.promise();
     };
 
-    DeferredSQLDatabase.prototype.readTransaction = function readTransaction(callback) {
+    window.DeferredSQLDatabase.prototype.readTransaction = function readTransaction(callback) {
         var d = $.Deferred(),
             errorCallback = function (error) {
                 d.reject(error);
@@ -63,7 +64,7 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                return callback(new DeferredSQLTransaction(tx));
+                return callback(new window.DeferredSQLTransaction(tx));
             };
 
         this._database.readTransaction(wrappedCallback, errorCallback, successCallback);
@@ -71,7 +72,7 @@
         return d.promise();
     };
 
-    DeferredSQLDatabase.prototype.changeVersion = function changeVersion(oldVersion, newVersion, callback) {
+    window.DeferredSQLDatabase.prototype.changeVersion = function changeVersion(oldVersion, newVersion, callback) {
         var self = this,
             d = $.Deferred(),
             errorCallback = function (error) {
@@ -83,14 +84,11 @@
                 d.resolve();
             },
             wrappedCallback = function (tx) {
-                return callback(new DeferredSQLTransaction(tx));
+                return callback(new window.DeferredSQLTransaction(tx));
             };
 
-        this._database.changeVersion(oldVersion, newVersion, callback, errorCallback, successCallback);
+        this._database.changeVersion(oldVersion, newVersion, wrappedCallback, errorCallback, successCallback);
 
         return d.promise();
     };
-
-    window.openDatabaseDeferred = openDatabaseDeferred;
-
 })(window, jQuery);
